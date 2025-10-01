@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-// Khai b�o c?u tr�c d? li?u Truy?n (m�, t�n, t�c gi?, th? lo?i, t?p s?, don gi� thu�/ng�y, t�nh tr?ng)
+// Khai báo c?u trúc d? li?u Truy?n (mã, tên, tác gi?, th? lo?i, t?p s?, don giá thuê/ngày, tình tr?ng)
 typedef struct {
 	char ma_truyen[20];
 	char ten[20];
@@ -16,15 +16,79 @@ typedef struct {
 struct Node{
     truyen data;
     struct Node *pNext;
-}Node;
+};
 
 struct Stack{
     Node *top;
 };
-void Push(Stack *t,truyen x)
 
+void Push(Stack *t,truyen x)
+{
+    Node *p = (Node*)malloc(sizeof(Node));
+    p->data = x;
+    p->pNext=t->top;
+    t->top=p;
+}
+
+void hienThiTruyen(truyen t) {
+    printf("Ma truyen: %s\n", t.ma_truyen);
+    printf("Ten: %s\n", t.ten);
+    printf("Tac gia: %s\n", t.tac_gia);
+    printf("The loai: %s\n", t.the_loai);
+    printf("Tap so: ");
+    for (int i = 0; i < 10; i++) {
+        if (t.tap_so[i] != 0) // chỉ in nếu có dữ liệu
+            printf("%d ", t.tap_so[i]);
+    }
+    printf("\n");
+    printf("Don gia thue/ngay: %.2f\n", t.don_gia_thue);
+    printf("Tinh trang: %s\n", t.tinh_trang ? "Con" : "Da cho thue");
+    printf("----------------------------\n");
+}
+
+void Top(Stack *t,int a)
+{
+    Node *p=t->top;
+    if (p == NULL) {
+        printf("Stack rong! Khong co truyen nao.\n");
+        return;
+    }
+    printf("%d Truyen moi nhap gan nhat (Top):\n",a);
+    for(int i=0;i<a;i++)
+    {
+        hienThiTruyen(p->data);
+        p=p->pNext;
+    }
+}
+
+bool Pop(Stack *s) {
+    if(s->top == NULL) {
+        printf("Stack rong, khong the Pop!\n");
+        return false;
+    }
+    Node *p = s->top;
+    s->top = p->pNext;
+    free(p);
+    return true;
+}
+bool isEmpty(Stack *s) {
+    return s->top == NULL;
+}
 int main()
 {
+    Stack s;
+    s.top = NULL;
+    truyen a = {"T01", "Doraemon", "Fujiko", "Thieu nhi", {1,2,3}, 5000, true};
+    truyen b = {"T02", "Conan", "Aoyama", "Trinh tham", {1,2}, 7000, true};
+    truyen c = {"T03", "One Piece", "Oda", "Phieu luu", {1}, 10000, true};
+    Push(&s, a);
+    Push(&s, b);
+    Push(&s, c);
+    Top(&s, 1); // in ra 1 truyện trên cùng
+    Top(&s, 2); // in ra 2 truyện trên cùng
+    Top(&s, 3); // in ra 3 truyện trên cùng
+    Top(&s, 5); // in ra nhiều hơn số phần tử, vẫn ok
 
+    return 0;
 }
 
