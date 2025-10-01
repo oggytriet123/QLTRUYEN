@@ -16,12 +16,25 @@ typedef struct {
 struct Node{
     truyen data;
     struct Node *pNext;
-}Node;
+};
 
 struct Stack{
     Node *top;
 };
-void Push(Stack *t,truyen x)
+//void Push(Stack *t,truyen x)
+bool Pop(Stack *s,truyen *x) {
+    if(s->top == NULL) {
+        printf("Stack rong, khong the Pop!\n");
+        return false;
+    }
+    Node *p = s->top;
+    s->top = p->pNext;
+    free(p);
+    return true;
+}
+bool isEmpty(Stack *s) {
+    return s->top == NULL;
+}
 
 int main()
 {
