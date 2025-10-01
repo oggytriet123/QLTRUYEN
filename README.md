@@ -13,7 +13,7 @@ Bằng Cấu Trúc **Stack** và **Queue** (danh sách liên kết đơn)
 ## 🧱 Yêu cầu 1: Hiện thực **Stack** (danh sách liên kết đơn)
 
 ### Chức năng cơ bản
-- [ ] Khai báo cấu trúc dữ liệu **Truyện** (mã, tên, tác giả, thể loại, tập số, đơn giá thuê/ngày, tình trạng)
+- [x] Khai báo cấu trúc dữ liệu **Truyện** (mã, tên, tác giả, thể loại, tập số, đơn giá thuê/ngày, tình trạng)
 - [ ] Cài đặt Node và Stack (Push, Pop, Top)
 
 ### Quản lý kho truyện bằng Stack
