@@ -74,6 +74,10 @@ bool Pop(Stack *s) {
 bool isEmpty(Stack *s) {
     return s->top == NULL;
 }
+
+
+
+
 int main()
 {
     Stack s;
