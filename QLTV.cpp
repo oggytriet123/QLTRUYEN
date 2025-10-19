@@ -48,19 +48,18 @@ typedef struct {
     int so_luong;
 } truyen;
 
-struct Node {
+typedef struct Node {
     truyen data;
     struct Node *pNext;
-};
+}Node;
 
-struct Stack {
+typedef struct Stack {
     Node *top;
-};
+}Stack;
 
 void Push(Stack *t, truyen x) {
     if (t->top == NULL) {
         Node *p = (Node*)malloc(sizeof(Node));
-        x.so_luong = 1;
         p->data = x;
         p->pNext = NULL;
         t->top = p;
@@ -70,24 +69,24 @@ void Push(Stack *t, truyen x) {
     Node *p = t->top;
     while (p != NULL) {
         if (strcmp(p->data.ma_truyen, x.ma_truyen) == 0) {
-            p->data.so_luong++;
+             p->data.so_luong += x.so_luong;
             return;
         }
         p = p->pNext;
     }
 
     Node *moi = (Node*)malloc(sizeof(Node));
-    x.so_luong = 1;
     moi->data = x;
     moi->pNext = t->top;
     t->top = moi;
 }
 
+
 void nhapTruyen(Stack *kho) {
     truyen t;
     printf("Nhap ma truyen: ");
     scanf("%s", t.ma_truyen);
-    getchar(); // bỏ ký tự Enter
+    getchar();
 
     printf("Nhap ten truyen: ");
     fgets(t.ten, sizeof(t.ten), stdin);
@@ -189,6 +188,13 @@ truyen Pop(Stack *s, StackTra *tra) {
     return a;
 }
 
+void Popdon(Stack *s) {
+    if (s->top == NULL) return;
+    Node *p = s->top;
+    s->top = p->pNext;
+    free(p);
+}
+
 bool isEmpty(Stack *s) {
     return s->top == NULL;
 }
@@ -220,8 +226,8 @@ void pushThue(Stacklog *t, thue a) {
 }
 
 void PrintThue(thue l) {
-    printf("Ma: %s | Ten: %s | Ngay thue: %s | Ngay du kien: %s | Ngay tra: %s | So ngay: %d | Phi: %.2f\n",
-           l.ma_truyen, l.ten, l.ngay_thue, l.ngay_du_kien, l.ngay_tra, l.so_ngay, l.tong_phi);
+    printf("Ma: %s | Ten: %s | Ngay thue: %s | Ngay du kien: %s | Ngay tra: %s | Phi: %.2f\n",
+           l.ma_truyen, l.ten, l.ngay_thue, l.ngay_du_kien, l.ngay_tra, l.tong_phi);
 }
 
 void Xuatthue(Stacklog *t) {
@@ -261,7 +267,75 @@ thue Popthue(Stacklog *t) {
     return a;
 }
 
-void thueTruyen(Stack *kho, Stacklog *logThue) {
+truyen PopTheoMaTra(Stack *s, const char *maCanTim, StackTra *tra) {
+    truyen loi = {"", "", "", "", {0}, 0.0, false, 0};
+    if (s->top == NULL) {
+        printf("Stack rong, khong the PopTheoMa!\n");
+        return loi;
+    }
+
+    Stack tam;
+    tam.top = NULL;
+    bool timThay = false;
+    truyen ketQua;
+    while (s->top != NULL) {
+        truyen t = s->top->data;
+        Popdon(s);
+
+        if (strcmp(t.ma_truyen, maCanTim) == 0) {
+            ketQua = t;
+            timThay = true;
+            break;
+        } else {
+            Push(&tam, t);
+        }
+    }
+    while (tam.top != NULL) {
+        truyen t = tam.top->data;
+        Popdon(&tam);
+        Push(s, t);
+    }
+    if (timThay) {
+        PushTam(tra, ketQua);
+        return ketQua;
+    } else {
+        printf("Khong tim thay ma truyen '%s' trong Stack!\n", maCanTim);
+        return loi;
+    }
+}
+
+truyen PopTheoMa(StackTra *tra, const char *ma) {
+    truyen loi = {"", "", "", "", {0}, 0.0, false, 0};
+    if (tra->top == NULL) {
+        printf("StackTra rong, khong the PopTheoMa!\n");
+        return loi;
+    }
+    if (strcmp(tra->top->data.ma_truyen, ma) == 0) {
+        Node *temp = tra->top;
+        truyen result = temp->data;
+        tra->top = temp->pNext;
+        free(temp);
+        return result;
+    }
+    Node *prev = tra->top;
+    Node *current = tra->top->pNext;
+
+    while (current != NULL) {
+        if (strcmp(current->data.ma_truyen, ma) == 0) {
+            truyen result = current->data;
+            prev->pNext = current->pNext;
+            free(current);
+            return result;
+        }
+        prev = current;
+        current = current->pNext;
+    }
+
+    printf("Khong tim thay truyen co ma '%s' trong StackTra!\n", ma);
+    return loi;
+}
+
+void thueTruyen(Stack *kho, Stacklog *logThue, StackTra *tra) {
     if (isEmpty(kho)) {
         printf("Kho trong, khong co truyen de thue!\n");
         return;
@@ -274,43 +348,55 @@ void thueTruyen(Stack *kho, Stacklog *logThue) {
     Node *p = kho->top;
     while (p != NULL) {
         if (strcmp(p->data.ma_truyen, ma) == 0) {
-            if (p->data.so_luong > 0) {
-                p->data.so_luong--;
-                if (p->data.so_luong == 0) p->data.tinh_trang = false;
+            thue log;
+            strcpy(log.ma_truyen, p->data.ma_truyen);
 
-                thue log;
-                strcpy(log.ma_truyen, p->data.ma_truyen);
+            printf("Nhap ngay thue (dd/mm/yyyy): ");
+            scanf("%s", log.ngay_thue);
+            printf("Nhap ngay du kien tra (dd/mm/yyyy): ");
+            scanf("%s", log.ngay_du_kien);
 
-                printf("Nhap ngay thue (dd/mm/yyyy): ");
-                scanf("%s", log.ngay_thue);
-                printf("Nhap ngay du kien tra (dd/mm/yyyy): ");
-                scanf("%s", log.ngay_du_kien);
-                if (sosanhngay(log.ngay_du_kien, log.ngay_thue) < 0) {
+            if (sosanhngay(log.ngay_du_kien, log.ngay_thue) < 0) {
                 printf("Loi: Ngay du kien tra phai sau ngay thue!\n");
-                return;}
-                printf("Nhap so ngay thue: ");
-                scanf("%d", &log.so_ngay);
-                printf("Nhap ten nguoi thue: ");
-                getchar();
-                fgets(log.ten, sizeof(log.ten), stdin);
-                log.ten[strcspn(log.ten, "\n")] = '\0';
-                log.tong_phi = log.so_ngay * p->data.don_gia_thue;
-                strcpy(log.ngay_tra, "-");
-
-                pushThue(logThue, log);
-                printf("\n Thue thanh cong!\n");
-                printf("Tong phi du kien: %.0f VND\n", log.tong_phi);
-                printf("So luong con lai cua '%s': %d\n", p->data.ten, p->data.so_luong);
-                return;
-            } else {
-                printf(" Truyen '%s' da het hang!\n", p->data.ma_truyen);
                 return;
             }
+
+            printf("Nhap so ngay thue: ");
+            scanf("%d", &log.so_ngay);
+            printf("Nhap ten nguoi thue: ");
+            getchar();
+            fgets(log.ten, sizeof(log.ten), stdin);
+            log.ten[strcspn(log.ten, "\n")] = '\0';
+
+            log.tong_phi = log.so_ngay * p->data.don_gia_thue;
+            strcpy(log.ngay_tra, "-");
+
+            if (p->data.so_luong > 1) {
+                p->data.so_luong--;
+                pushThue(logThue, log);
+                printf("\nThue thanh cong!\n");
+                printf("Tong phi du kien: %.0f VND\n", log.tong_phi);
+                printf("So luong con lai cua '%s': %d\n",
+                       p->data.ten, p->data.so_luong);
+            }
+            else if (p->data.so_luong == 1) {
+                truyen temp = p->data;
+                PopTheoMaTra(kho, ma, tra);
+                pushThue(logThue, log);
+                printf("\nThue thanh cong! (truyen cuoi cung trong kho)\n");
+                printf("Tong phi du kien: %.0f VND\n", log.tong_phi);
+                printf("'%s' da duoc chuyen sang danh sach tra.\n", temp.ten);
+            }
+
+            return;
         }
+
         p = p->pNext;
     }
+
     printf("Khong tim thay ma truyen '%s' trong kho!\n", ma);
 }
+
 
 
 void PushKho(Stack *s, truyen x) {
@@ -355,18 +441,17 @@ void traTruyen(Stack *kho, Stacklog *lichSu, StackTra *tra) {
             }
 
             strcpy(p->data.ngay_tra, ngayTraThucTe);
+            int songaythucte = tinhkhoangcachngay(p->data.ngay_thue, p->data.ngay_tra);
+            float phithat = 0.0;
             Node *q = kho->top;
             bool coTrongKho = false;
-            float phithat;
-            int a = tinhkhoangcachngay(p->data.ngay_thue,p->data.ngay_tra);
+
             while (q != NULL) {
                 if (strcmp(q->data.ma_truyen, ma) == 0) {
-                    if(a<=0)
-                    {
-                        phithat=q->data.don_gia_thue;
-                    }else
-                    {
-                        phithat=a*q->data.don_gia_thue;
+                    if (songaythucte <= 0) {
+                        phithat = q->data.don_gia_thue;
+                    } else {
+                        phithat = songaythucte * q->data.don_gia_thue;
                     }
                     q->data.so_luong++;
                     q->data.tinh_trang = true;
@@ -376,43 +461,115 @@ void traTruyen(Stack *kho, Stacklog *lichSu, StackTra *tra) {
                 }
                 q = q->pNext;
             }
-            p->data.tong_phi=phithat;
+
+            p->data.tong_phi = phithat;
             if (!coTrongKho && tra->top != NULL) {
-                truyen traVe = PopTam(tra);
+                truyen traVe = PopTheoMa(tra, p->data.ma_truyen);
                 PushKho(kho, traVe);
+                if (songaythucte <= 0) {
+                    p->data.tong_phi = traVe.don_gia_thue;
+                } else {
+                    p->data.tong_phi = songaythucte * traVe.don_gia_thue;
+                }
             }
 
-            printf("Tra truyen thanh cong!\n");
+            printf("Tra truyen thanh cong! Tong phi: %.0f VND\n", p->data.tong_phi);
             return;
         }
         p = p->lnext;
     }
+
     if (!timThay)
         printf("Khong tim thay thong tin thue tuong ung!\n");
 }
 
-void InTheoThuTuNhap(Stack *s) {
-    StackTra d;
-    d.top = NULL;
+void XuatDangDuocThue(Stacklog *logThue) {
+    if (logThue->top == NULL) {
+        printf("Khong co thong tin thue nao!\n");
+        return;
+    }
 
+    Nodelog *p = logThue->top;
+    bool coThue = false;
+
+    printf("\n====== DANH SACH TRUYEN DANG DUOC THUE ======\n");
+    printf("%-10s | %-20s | %-15s | %-12s | %-12s | %-5s\n",
+           "Ma", "Ten nguoi thue", "Ngay thue", "Ngay du kien", "Ngay tra", "Phi");
+    printf("---------------------------------------------------------------\n");
+
+    while (p != NULL) {
+        if (strcmp(p->data.ngay_tra, "-") == 0) {
+            printf("%-10s | %-20s | %-15s | %-12s | %-12s | %-5.0f\n",
+                   p->data.ma_truyen,
+                   p->data.ten,
+                   p->data.ngay_thue,
+                   p->data.ngay_du_kien,
+                   p->data.ngay_tra,
+                   p->data.tong_phi);
+            coThue = true;
+        }
+        p = p->lnext;
+    }
+
+    if (!coThue)
+        printf("Tat ca truyen da duoc tra het!\n");
+}
+
+
+void InTheoThuTuNhap(Stack *s) {
     if (isEmpty(s)) {
-        printf("Stack rong, khong co truyen!\n");
+        printf("Kho rong, khong co truyen!\n");
         return;
     }
 
     Stack temp;
     temp.top = NULL;
     Node *p = s->top;
-
     while (p != NULL) {
         Push(&temp, p->data);
         p = p->pNext;
     }
+    Node *q = temp.top;
+    while (q != NULL) {
+        int tong = q->data.so_luong;
+        Node *r = q->pNext;
+        Node *prev = q;
 
-    printf("Danh sach truyen theo thu tu nhap (tu cu den moi):\n");
-    while (temp.top != NULL) {
-        hienThiTruyen(temp.top->data);
-        Pop(&temp, &d);
+        while (r != NULL) {
+            if (strcmp(q->data.ma_truyen, r->data.ma_truyen) == 0) {
+                tong += r->data.so_luong;
+                prev->pNext = r->pNext;
+                free(r);
+                r = prev->pNext;
+            } else {
+                prev = r;
+                r = r->pNext;
+            }
+        }
+
+        q->data.so_luong = tong;
+        q = q->pNext;
+    }
+    printf("\n========= DANH SACH TRUYEN TRONG KHO =========\n");
+    printf("%-10s | %-20s | %-15s | %-12s | %-8s | %-5s\n",
+           "Ma", "Ten", "Tac gia", "The loai", "Gia thue", "SL");
+    printf("--------------------------------------------------------------\n");
+
+    q = temp.top;
+    while (q != NULL) {
+        printf("%-10s | %-20s | %-15s | %-12s | %-8.0f | %-5d\n",
+               q->data.ma_truyen,
+               q->data.ten,
+               q->data.tac_gia,
+               q->data.the_loai,
+               q->data.don_gia_thue,
+               q->data.so_luong);
+        q = q->pNext;
+    }
+
+
+    while (!isEmpty(&temp)) {
+        Popdon(&temp);
     }
 }
 
@@ -462,17 +619,107 @@ void docDanhSachTruyen(Stack *kho) {
     fclose(f);
 }
 
+void ghiDanhSachThue(Stacklog *logThue) {
+    FILE *f = fopen("thue.txt", "w");
+    if (!f) {
+        printf("Khong mo duoc file thue.txt de ghi!\n");
+        return;
+    }
+
+    Nodelog *p = logThue->top;
+    while (p != NULL) {
+        fprintf(f, "%s|%s|%s|%s|%s|%d|%.0f\n",
+                p->data.ma_truyen,
+                p->data.ten,
+                p->data.ngay_thue,
+                p->data.ngay_du_kien,
+                p->data.ngay_tra,
+                p->data.so_ngay,
+                p->data.tong_phi);
+        p = p->lnext;
+    }
+
+    fclose(f);
+}
+
+void docDanhSachThue(Stacklog *logThue) {
+    FILE *f = fopen("thue.txt", "r");
+    if (!f) {
+        printf("Chua co du lieu thue.txt, tao moi!\n");
+        return;
+    }
+
+    thue t;
+    while (fscanf(f, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d|%f\n",
+                  t.ma_truyen,
+                  t.ten,
+                  t.ngay_thue,
+                  t.ngay_du_kien,
+                  t.ngay_tra,
+                  &t.so_ngay,
+                  &t.tong_phi) == 7) {
+        pushThue(logThue, t);
+    }
+
+    fclose(f);
+}
+
+void ghiDanhSachTra(StackTra *tra) {
+    FILE *f = fopen("tra.txt", "w");
+    if (!f) {
+        printf("Khong mo duoc file tra.txt de ghi!\n");
+        return;
+    }
+
+    Node *p = tra->top;
+    while (p != NULL) {
+        fprintf(f, "%s|%s|%s|%s|%.0f|%d|%d\n",
+                p->data.ma_truyen,
+                p->data.ten,
+                p->data.tac_gia,
+                p->data.the_loai,
+                p->data.don_gia_thue,
+                p->data.so_luong,
+                p->data.tinh_trang);
+        p = p->pNext;
+    }
+
+    fclose(f);
+}
+
+void docDanhSachTra(StackTra *tra) {
+    FILE *f = fopen("tra.txt", "r");
+    if (!f) {
+        printf("Chua co file tra.txt, tao moi!\n");
+        return;
+    }
+
+    truyen t;
+    while (fscanf(f, "%[^|]|%[^|]|%[^|]|%[^|]|%f|%d|%d\n",
+                  t.ma_truyen,
+                  t.ten,
+                  t.tac_gia,
+                  t.the_loai,
+                  &t.don_gia_thue,
+                  &t.so_luong,
+                  (int*)&t.tinh_trang) == 7)
+    {
+        PushTam(tra, t);
+    }
+
+    fclose(f);
+}
+
+
+
+
 int main() {
-    Stack kho;
-    kho.top = NULL;
-
-    Stacklog log;
-    log.top = NULL;
-
-    StackTra tra;
-    tra.top = NULL;
-
+    Stack kho; kho.top = NULL;
+    Stacklog log; log.top = NULL;
+    StackTra tra; tra.top = NULL;
     docDanhSachTruyen(&kho);
+    docDanhSachThue(&log);
+    docDanhSachTra(&tra);
 
     int choice;
     do {
@@ -481,6 +728,8 @@ int main() {
         printf("2. Nhap truyen moi\n");
         printf("3. Thue truyen\n");
         printf("4. Tra truyen\n");
+        printf("5. Xem truyen dang duoc thue\n");
+        printf("6. Xem lich su thue\n");
         printf("0. Thoat\n");
         printf("=========================================\n");
         printf("Chon chuc nang: ");
@@ -497,26 +746,41 @@ int main() {
                 break;
 
             case 3:
-                thueTruyen(&kho, &log);
+                thueTruyen(&kho, &log, &tra);
                 ghiDanhSachTruyen(&kho);
+                ghiDanhSachThue(&log);
+                ghiDanhSachTra(&tra);
                 break;
 
             case 4:
                 traTruyen(&kho, &log, &tra);
                 ghiDanhSachTruyen(&kho);
+                ghiDanhSachThue(&log);
+                ghiDanhSachTra(&tra);
+                break;
+
+            case 5:
+                XuatDangDuocThue(&log);
+                break;
+
+            case 6:
+                Xuatthue(&log);
                 break;
 
             case 0:
-                printf("\n Dang luu du lieu truoc khi thoat...\n");
+                printf("\nDang luu du lieu truoc khi thoat...\n");
                 ghiDanhSachTruyen(&kho);
-                printf(" Thoat chuong trinh!\n");
+                ghiDanhSachThue(&log);
+                ghiDanhSachTra(&tra);
+                printf("Thoat chuong trinh!\n");
                 break;
 
             default:
-                printf(" Lua chon khong hop le!\n");
+                printf("Lua chon khong hop le!\n");
         }
 
     } while (choice != 0);
 
     return 0;
 }
+
